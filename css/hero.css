@@ -1,0 +1,67 @@
+/* ═══ HERO ═══ */
+.hero { position: fixed; inset: 0; z-index: 10; }
+.slideshow { position: absolute; inset: 0; background: var(--void); overflow: hidden; }
+.slide-layer {
+  position: absolute; inset: -5%;
+  background-size: cover; background-position: center;
+  opacity: 0; will-change: transform, opacity, filter;
+}
+.slide-active { opacity: 1; z-index: 1; }
+.slide-layer.is-morphing { filter: url(#liquid-mosh) saturate(1.12); z-index: 2; }
+.slide-layer.is-morphing-out {
+  opacity: 0; filter: blur(24px) contrast(1.2);
+  transition: opacity var(--mosh-ms) var(--ease), filter var(--mosh-ms) var(--ease);
+}
+.slide-layer.is-morphing-in { opacity: 1; z-index: 3; }
+
+.hero-vignette {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background: linear-gradient(to top, rgba(3,3,3,0.92) 0%, transparent 48%),
+    radial-gradient(ellipse at center, transparent 35%, rgba(3,3,3,0.5) 100%);
+}
+.hero-content {
+  position: absolute; inset: 0; z-index: 5;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: clamp(1.5rem, 5vw, 3rem);
+  padding-bottom: max(2rem, env(safe-area-inset-bottom));
+}
+.hero-content {
+  mix-blend-mode: exclusion;
+  color: #fff;
+}
+
+.hero-eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: 0.65;
+  margin-bottom: 0.75rem;
+}
+
+.hero-title,
+.hero-title.font-display {
+  font-size: clamp(2rem, 7.5vw, 4.25rem);
+  line-height: 0.95;
+  margin: 0 0 1.75rem;
+  max-width: 16ch;
+  color: #fff !important;
+}
+.hero-actions { display: flex; flex-wrap: wrap; gap: 0.65rem 1rem; }
+.hero-progress { position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--line); z-index: 6; }
+.hero-progress-bar { height: 100%; width: 0; background: var(--snow); transition: width 0.2s linear; }
+
+.btn-primary {
+  padding: 0.85rem 1.65rem; font-size: 0.68rem; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--void); background: var(--snow); border: none; cursor: pointer;
+  transition: transform 0.35s var(--ease), opacity 0.35s;
+}
+.btn-primary:hover { transform: translateY(-2px); opacity: 0.92; }
+.btn-ghost {
+  padding: 0.85rem 1.2rem; font-size: 0.68rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--snow); background: transparent;
+  border: 1px solid rgba(255,255,255,0.28); cursor: pointer;
+}
+.btn-ghost:hover { border-color: var(--snow); background: rgba(255,255,255,0.06); }
+

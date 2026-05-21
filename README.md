@@ -1,88 +1,88 @@
 # CIPRI — Visual Artist & Filmmaker
 
-
-
 ## Run
 
-
-
 ```bash
-
 npx serve .
-
 ```
 
-
+Open the URL shown (ES modules need a local server — `file://` will not work).
 
 **Reset Preloader** (top-right) replays the intro.
 
-
-
-## Edit `app.js`
-
-
-
-### `PROJECTS` — multiple images per category
-
-
-
-Each project can include an `images: [...]` array with **any number** of image URLs. During **Enter Experience**, the presentation auto-advances and cycles through every image in that category before moving to the next project.
-
-
-
-```javascript
-
-{
-
-  id: 'street',
-
-  category: 'Street',
-
-  title: 'Urban Frequency',
-
-  type: 'image',
-
-  media: 'https://…',           // fallback / primary
-
-  images: [
-
-    'https://…/photo1.jpg',
-
-    'https://…/photo2.jpg',
-
-    'https://…/photo3.jpg',
-
-    // add more…
-
-  ],
-
-}
+## Project layout
 
 ```
+js/
+  main.js              ← entry (wired from index.html)
+  config/
+    projects.js        ← **edit your portfolio projects here**
+    contact.js         ← email, phone, social links
+    timing.js          ← TIMING, CONFIG, PERF (all durations in ms)
+  data/
+    portfolio.js       ← hero image list derived from PROJECTS
+  core/
+    state.js           ← shared app state & DOM refs
+    dom.js             ← cacheElements()
+    utils.js           ← helpers, YouTube embed, timecode
+  preloader/
+    mobile.js          ← Lightroom-style mobile preloader
+    desktop.js         ← Premiere-style desktop preloader
+    transition.js      ← zoom into hero, reveal site
+    loop.js            ← stop preloader timers
+    index.js           ← run / reset preloader
+  hero/
+    index.js           ← home slideshow
+  deck/
+    index.js           ← Enter Experience presentation
+  drawer.js            ← contact drawer
+css/
+  variables.css        ← :root, base resets
+  preloader.css
+  hero.css
+  deck.css
+style.css              ← imports css/*.css
+index.html
+```
 
+Regenerate split files from the monolith (if you still have a single `app.js` backup):
 
+```bash
+node scripts/split-modules.mjs
+node scripts/split-css.mjs
+```
+
+## Edit `js/config/projects.js`
+
+### Multiple images per category
+
+Each project can include an `images: [...]` array. During **Enter Experience**, the presentation cycles through every image before the next project.
+
+```javascript
+{
+  id: 'street',
+  category: 'Street',
+  title: 'Urban Frequency',
+  type: 'image',
+  media: 'https://…',
+  images: ['https://…/1.jpg', 'https://…/2.jpg'],
+}
+```
 
 YouTube projects use `type: 'youtube'` and `media` (watch URL).
 
-**Start later in the video** (skip intro) — either:
+**Start later in the video:**
 
 ```javascript
 {
   type: 'youtube',
   media: 'https://youtu.be/VIDEO_ID',
-  youtubeStart: 90,           // seconds
-  // youtubeStart: '1m30',     // or 1 min 30 sec
-  // media: 'https://youtu.be/VIDEO_ID?t=90',  // or ?t=1m30s on the link
+  youtubeStart: 90,
+  // or media: 'https://youtu.be/VIDEO_ID?t=90',
 }
 ```
 
-The embed uses YouTube’s `start=` parameter (seconds from the beginning).
-
-
-
-### `TIMING` — edit all durations in one place (ms)
-
-In `app.js`, find the **`TIMING`** object (near the top). Examples:
+## Edit `js/config/timing.js`
 
 | Variable | What it controls |
 |----------|------------------|
@@ -90,27 +90,14 @@ In `app.js`, find the **`TIMING`** object (near the top). Examples:
 | `presentationFxBefore` / `presentationSlideMove` / `presentationFxAfter` | Transition dip + slide move |
 | `presentationImageMin` | Minimum time on a single-photo project |
 | `presentationImagePerPhoto` | Extra ms per URL in `images: []` |
-| **`presentationYoutube`** | **How long YouTube slides stay** (default 14s) |
+| `presentationYoutube` | How long YouTube slides stay |
 | `presentationPitch` | Final contact slide |
-| `presentationGalleryInterval` | Photo cycling speed within one project |
-| `presentationLoop` | `true` = restart from project 1 after pitch |
-
-```javascript
-presentationYoutube: 22000,  // 22 seconds on each YouTube project
-```
-
-
+| `presentationGalleryInterval` | Photo cycling within one project |
+| `presentationLoop` | Restart from project 1 after pitch |
 
 ## Experience
 
-
-
 1. **Preloaders** — Premiere (desktop) / Lightroom (mobile)
-
 2. **Hero** — liquid slideshow
-
-3. **Enter Experience** — automated film sequence from project 1 → contact slide. **Pause** or **Space** to pause. **Exit** to leave.
-
-4. Slides use pixel-perfect viewport sizing (fixed mobile framing). Gallery images rotate while each project is on screen.
-
-
+3. **Enter Experience** — automated sequence; **Pause** or **Space**; **Exit** to leave
+4. Manual nav: arrows, dots, wheel (desktop), swipe (mobile), ←/→ keys
