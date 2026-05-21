@@ -1,1 +1,278 @@
-<h1>Hello World</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="description" content="Cipri — Visual Artist & Filmmaker" />
+  <title>CIPRI — Visual Artist & Filmmaker</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Bebas Neue', 'sans-serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-void text-snow font-sans antialiased">
+
+  <svg class="svg-filters" aria-hidden="true">
+    <defs>
+      <filter id="liquid-mosh" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+        <feTurbulence id="turbulence" type="fractalNoise" baseFrequency="0.008" numOctaves="4" seed="4" result="noise" />
+        <feDisplacementMap id="displacement" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </defs>
+  </svg>
+
+  <!-- PRELOADER: Premiere (desktop) · Lightroom Mobile (phone) -->
+  <div id="preloader" class="preloader" aria-hidden="false">
+    <button type="button" id="reset-preloader" class="dev-reset">Reset Preloader</button>
+
+    <!-- MOBILE — Lightroom Mobile -->
+    <div class="preloader-mobile" id="preloader-mobile" aria-hidden="true">
+      <header class="lr-header">
+        <span class="lr-back" aria-hidden="true"></span>
+        <div class="lr-title">
+          <span class="lr-album">CIPRI · Develop</span>
+          <span class="lr-sub" id="lr-meta">RAW · Before</span>
+        </div>
+        <span class="lr-pct" id="lr-pct">0%</span>
+      </header>
+
+      <div class="lr-canvas-wrap" id="lr-canvas-wrap">
+        <div class="lr-canvas" id="lr-canvas">
+          <div class="lr-photo" id="lr-photo"></div>
+        </div>
+      </div>
+
+      <div class="lr-sliders" id="lr-sliders">
+        <div class="lr-slider" data-slider="exposure">
+          <span class="lr-slider-label">Exposure</span>
+          <div class="lr-slider-track">
+            <div class="lr-slider-fill" id="lr-fill-exposure"></div>
+            <span class="lr-slider-thumb" id="lr-thumb-exposure"></span>
+          </div>
+          <span class="lr-slider-val" id="lr-val-exposure">—</span>
+        </div>
+        <div class="lr-slider" data-slider="contrast">
+          <span class="lr-slider-label">Contrast</span>
+          <div class="lr-slider-track">
+            <div class="lr-slider-fill" id="lr-fill-contrast"></div>
+            <span class="lr-slider-thumb" id="lr-thumb-contrast"></span>
+          </div>
+          <span class="lr-slider-val" id="lr-val-contrast">—</span>
+        </div>
+        <div class="lr-slider" data-slider="highlights">
+          <span class="lr-slider-label">Highlights</span>
+          <div class="lr-slider-track">
+            <div class="lr-slider-fill" id="lr-fill-highlights"></div>
+            <span class="lr-slider-thumb" id="lr-thumb-highlights"></span>
+          </div>
+          <span class="lr-slider-val" id="lr-val-highlights">—</span>
+        </div>
+        <div class="lr-slider" data-slider="shadows">
+          <span class="lr-slider-label">Shadows</span>
+          <div class="lr-slider-track">
+            <div class="lr-slider-fill" id="lr-fill-shadows"></div>
+            <span class="lr-slider-thumb" id="lr-thumb-shadows"></span>
+          </div>
+          <span class="lr-slider-val" id="lr-val-shadows">—</span>
+        </div>
+        <div class="lr-slider" data-slider="saturation">
+          <span class="lr-slider-label">Saturation</span>
+          <div class="lr-slider-track">
+            <div class="lr-slider-fill" id="lr-fill-saturation"></div>
+            <span class="lr-slider-thumb" id="lr-thumb-saturation"></span>
+          </div>
+          <span class="lr-slider-val" id="lr-val-saturation">—</span>
+        </div>
+      </div>
+
+      <p class="lr-status" id="lr-status">Loading RAW…</p>
+
+      <nav class="lr-tabs" aria-hidden="true">
+        <span class="is-active">Light</span>
+        <span>Color</span>
+        <span>Detail</span>
+      </nav>
+    </div>
+
+    <!-- DESKTOP — Premiere Pro -->
+    <div class="preloader-desktop" id="preloader-desktop">
+      <div class="pp-zoom-stage" id="pp-zoom-stage">
+        <div class="pp-app" id="pp-chrome">
+          <header class="pp-menubar">
+            <span class="pp-logo">Pr</span>
+            <nav class="pp-menu"><span>File</span><span>Edit</span><span>Clip</span><span>Sequence</span><span>Markers</span><span>Graphics</span><span>View</span></nav>
+            <span class="pp-workspace-tag">CIPRI_MASTER.prproj</span>
+          </header>
+
+          <nav class="pp-workspaces" aria-label="Workspaces">
+            <span>Assembly</span>
+            <span class="is-active">Editing <i class="pp-hamburger" aria-hidden="true"></i></span>
+            <span>Color</span>
+            <span>Effects</span>
+            <span>Audio</span>
+            <span>Graphics</span>
+            <span>Captions</span>
+          </nav>
+
+          <div class="pp-layout">
+            <section class="pp-panel pp-source">
+              <div class="pp-panel-head">
+                <span class="pp-tab active">Source: Camino_Fuente_Cam3.mp4</span>
+                <span class="pp-tab">Effect Controls</span>
+              </div>
+              <div class="pp-monitor-view">
+                <div class="pp-preview-slides">
+                  <div class="pp-preview-layer pp-source-a" id="pp-source-a"></div>
+                  <div class="pp-preview-layer pp-source-b" id="pp-source-b"></div>
+                </div>
+                <div class="pp-monitor-scrub"><div class="pp-scrub-fill" id="source-scrub"></div></div>
+                <div class="pp-monitor-bar">
+                  <span class="pp-timecode pp-timecode--current" id="source-tc">00:00:00:00</span>
+                  <span class="pp-timecode pp-timecode--dur" id="source-dur">00:00:08:21</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="pp-panel pp-program" id="program-panel">
+              <div class="pp-panel-head">
+                <span class="pp-tab active">Program: Lesson</span>
+                <span class="pp-quality">Full</span>
+              </div>
+              <div class="pp-monitor-view pp-program-view">
+                <div class="pp-preview-slides">
+                  <div class="pp-preview-layer pp-preview-a" id="pp-preview-a"></div>
+                  <div class="pp-preview-layer pp-preview-b" id="pp-preview-b"></div>
+                </div>
+                <div class="pp-safe-area" aria-hidden="true"></div>
+                <div class="pp-monitor-scrub"><div class="pp-scrub-fill pp-scrub-fill--program" id="program-scrub"></div></div>
+                <div class="pp-monitor-bar">
+                  <span class="pp-timecode pp-timecode--current pp-timecode--blink" id="program-tc">00:00:00:00</span>
+                  <span class="pp-timecode pp-timecode--dur" id="program-dur">00:00:27:17</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="pp-panel pp-project">
+              <div class="pp-panel-head">
+                <span class="pp-tab active">Project</span>
+                <span class="pp-tab">Media Browser</span>
+              </div>
+              <div class="pp-project-body">
+                <div class="pp-bin-grid" id="media-bin"></div>
+                <div class="pp-bin-list" id="media-list"></div>
+              </div>
+            </section>
+
+            <section class="pp-panel pp-timeline-panel">
+              <div class="pp-panel-head">
+                <span class="pp-tab active">Lesson</span>
+                <span class="pp-timecode pp-timecode--toolbar pp-timecode--blink" id="timecode">00:00:00:00</span>
+              </div>
+              <div class="pp-timeline-row">
+              <div class="pp-timeline" id="timeline-area">
+                <div class="pp-ruler" id="timeline-ruler"></div>
+                <div class="pp-tracks-wrap">
+                  <div class="pp-track-headers">
+                    <div class="pp-th"><span>V2</span></div>
+                    <div class="pp-th"><span>V1</span></div>
+                    <div class="pp-th pp-th--audio"><span>A1</span></div>
+                    <div class="pp-th pp-th--audio"><span>A2</span></div>
+                  </div>
+                  <div class="pp-tracks" id="pp-tracks">
+                    <div class="pp-track-lane"><div class="pp-clip pp-clip--v2a" data-label="B-Roll"></div></div>
+                    <div class="pp-track-lane"><div class="pp-clip pp-clip--v1" id="main-clip" data-label="Master"></div></div>
+                    <div class="pp-track-lane pp-track-lane--audio"><div class="pp-clip pp-clip--a1" data-label="Audio"></div></div>
+                    <div class="pp-track-lane pp-track-lane--audio"><div class="pp-clip pp-clip--a2"></div></div>
+                    <div id="playhead" class="pp-playhead">
+                      <div class="pp-playhead-knob" aria-hidden="true"><i class="knob-l"></i><i class="knob-r"></i></div>
+                      <div class="pp-playhead-line"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <aside class="pp-meters" aria-label="Audio levels">
+                <canvas id="audio-meters" class="pp-meters-canvas"></canvas>
+                <div class="pp-meters-scale"><span>0</span><span>-12</span><span>-∞</span></div>
+              </aside>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section id="hero" class="hero hidden" aria-label="Home">
+    <div class="slideshow">
+      <div id="slide-a" class="slide-layer slide-active"></div>
+      <div id="slide-b" class="slide-layer"></div>
+    </div>
+    <div class="hero-vignette" aria-hidden="true"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">Portfolio 2026</p>
+      <h1 class="hero-title font-display">CIPRI // VISUAL ARTIST &amp; FILMMAKER</h1>
+      <div class="hero-actions">
+        <button type="button" id="enter-experience" class="btn-primary">Enter Experience</button>
+        <button type="button" id="quick-contact" class="btn-ghost">Contact &amp; Socials</button>
+      </div>
+    </div>
+    <div class="hero-progress" aria-hidden="true">
+      <div id="hero-progress-bar" class="hero-progress-bar"></div>
+    </div>
+  </section>
+
+  <!-- PRESENTATION — horizontal cinematic deck -->
+  <section id="journey" class="journey hidden" aria-label="Portfolio presentation">
+    <div class="deck-grain" aria-hidden="true"></div>
+    <div class="deck-letterbox deck-letterbox--top" aria-hidden="true"></div>
+    <div class="deck-letterbox deck-letterbox--bottom" aria-hidden="true"></div>
+
+    <div class="deck-viewport" id="deck-viewport">
+      <div class="deck-track" id="deck-track"></div>
+    </div>
+
+    <div class="deck-fx" id="deck-fx" aria-hidden="true">
+      <div class="deck-fx-reel" id="deck-fx-reel"></div>
+    </div>
+
+    <div class="deck-chrome">
+      <button type="button" id="exit-journey" class="deck-btn deck-btn--exit">Exit</button>
+      <div class="deck-meta">
+        <span id="journey-index">01</span>
+        <span id="journey-category">—</span>
+        <span id="journey-gallery" class="deck-gallery-indicator hidden" aria-hidden="true"></span>
+      </div>
+      <button type="button" id="deck-pause" class="deck-btn deck-btn--pause" aria-pressed="false" aria-label="Pause presentation">Pause</button>
+    </div>
+
+    <div class="deck-sequence-bar" aria-hidden="true">
+      <div class="deck-sequence-fill" id="deck-sequence-fill"></div>
+    </div>
+
+    <div class="deck-dots" id="deck-dots" aria-hidden="true"></div>
+  </section>
+
+  <aside id="contact-drawer" class="contact-drawer" aria-hidden="true">
+    <button type="button" id="drawer-close" class="drawer-close" aria-label="Close">×</button>
+    <div id="drawer-content" class="drawer-content"></div>
+  </aside>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
