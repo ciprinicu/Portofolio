@@ -1069,6 +1069,15 @@ body { margin: 0; min-height: 100dvh; background: var(--void); overflow: hidden;
   background: #000;
 }
 
+.deck-slide:not(.is-active) {
+  content-visibility: auto;
+  contain: layout style paint;
+}
+
+.deck-track.is-moving {
+  will-change: transform;
+}
+
 .deck-media--cinema {
   position: absolute;
   inset: 0;
@@ -1087,6 +1096,11 @@ body { margin: 0; min-height: 100dvh; background: var(--void); overflow: hidden;
   object-fit: cover;
   border: 0;
   display: block;
+}
+
+.deck-yt-slot {
+  position: absolute;
+  inset: 0;
 }
 
 .deck-slide--youtube .deck-media {
@@ -1123,7 +1137,7 @@ body { margin: 0; min-height: 100dvh; background: var(--void); overflow: hidden;
   transition: opacity 0.85s ease;
   transform: scale(1.02);
 }
-.deck-gallery-slide.is-on {
+.deck-slide.is-active .deck-gallery-slide.is-on {
   opacity: 1;
   animation: deck-ken-burns 14s var(--ease-film) forwards;
 }
@@ -1234,6 +1248,7 @@ body { margin: 0; min-height: 100dvh; background: var(--void); overflow: hidden;
 }
 .deck-btn:disabled { opacity: 0.25; cursor: default; }
 .deck-btn--pause { min-width: 4.5rem; text-align: center; }
+.deck-btn--nav { font-size: 1.1rem; padding: 0.45rem 0.75rem; }
 
 .deck-meta {
   display: flex;
@@ -1276,7 +1291,7 @@ body { margin: 0; min-height: 100dvh; background: var(--void); overflow: hidden;
   z-index: 10;
   display: flex;
   gap: 8px;
-  pointer-events: none;
+  pointer-events: auto;
 }
 .deck-dot {
   width: 8px;
@@ -1284,6 +1299,8 @@ body { margin: 0; min-height: 100dvh; background: var(--void); overflow: hidden;
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.35);
   background: transparent;
+  padding: 0;
+  cursor: pointer;
   transition: background 0.25s, transform 0.25s;
 }
 .deck-dot.is-on {
@@ -1401,6 +1418,11 @@ body { margin: 0; min-height: 100dvh; background: var(--void); overflow: hidden;
   .journey.is-playing .deck-letterbox--top,
   .journey.is-playing .deck-letterbox--bottom {
     height: clamp(40px, 9vh, 64px);
+  }
+
+  .deck-chrome .deck-btn--nav {
+    display: inline-block;
+    padding: 0.4rem 0.65rem;
   }
 
   .deck-copy {

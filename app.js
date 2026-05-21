@@ -172,14 +172,27 @@ function allPortfolioImages() {
 }
 
 const HERO_SLIDES = allPortfolioImages();
-const COLLAGE_IMAGES = [
-  ...allPortfolioImages(),
-  'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&q=80',
-  'https://images.unsplash.com/photo-1478720568477-152d9b164e63?w=600&q=80',
-];
+
+const PERF = {
+  meterFps: 24,
+  resizeDebounceMs: 120,
+  reelAnimCancel: 0,
+};
 
 // =============================================================================
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
+
+function debounce(fn, wait) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), wait);
+  };
+}
+
+function isPageActive() {
+  return document.visibilityState === 'visible';
+}
 
 const state = {
   preloaderRunning: false,
@@ -211,6 +224,10 @@ const state = {
   galleryIdx: 0,
   deckViewportW: 0,
   deckViewportH: 0,
+  touchStartX: 0,
+  touchStartY: 0,
+  deckInputReady: false,
+  meterSizeKey: '',
 };
 
 const els = {};
@@ -272,6 +289,8 @@ function cacheElements() {
     deckTrack: $('#deck-track'),
     deckFx: $('#deck-fx'),
     deckFxReel: $('#deck-fx-reel'),
+    deckPrev: $('#deck-prev'),
+    deckNext: $('#deck-next'),
     deckPause: $('#deck-pause'),
     deckSequenceFill: $('#deck-sequence-fill'),
     deckDots: $('#deck-dots'),
@@ -544,22 +563,24 @@ function startPreviewSlideshow() {
 
   if (state.previewTimer) clearInterval(state.previewTimer);
   state.previewTimer = setInterval(() => {
+    if (!state.preloaderRunning || !isPageActive()) return;
     const next = (state.previewIdx + 1) % slides.length;
     const layer = state.previewLayer === 'a' ? 'b' : 'a';
     setMonitorSlide('program', slides[next], layer);
     state.previewIdx = next;
     state.previewLayer = layer;
     highlightBinIndex(next);
-  }, 850);
+  }, 900);
 
   if (state.sourceTimer) clearInterval(state.sourceTimer);
   state.sourceTimer = setInterval(() => {
+    if (!state.preloaderRunning || !isPageActive()) return;
     const next = (state.sourceIdx + 2) % slides.length;
     const layer = state.sourceLayer === 'a' ? 'b' : 'a';
     setMonitorSlide('source', slides[next], layer);
     state.sourceIdx = next;
     state.sourceLayer = layer;
-  }, 1100);
+  }, 1150);
 }
 
 function stopPreviewSlideshow() {
@@ -596,17 +617,23 @@ function startAudioMeters() {
   const SEGMENTS = 32;
   const BOTTOM = 6;
   const TOP = 4;
+  const frameInterval = 1000 / PERF.meterFps;
+  let lastFrame = 0;
+  let layout = { w: 0, h: 0, dpr: 1 };
 
-  function resize() {
+  function ensureLayout() {
     const rect = canvas.parentElement?.getBoundingClientRect() || canvas.getBoundingClientRect();
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const key = `${Math.round(rect.width)}x${Math.round(rect.height)}`;
+    if (key === state.meterSizeKey && layout.w) return layout;
+    state.meterSizeKey = key;
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    return { w: rect.width, h: rect.height };
+    layout = { w: rect.width, h: rect.height, dpr };
+    return layout;
   }
 
-  /** Segments rise from bottom (−∞) toward top (0 dB) */
   function drawChannel(x, barW, peak, meterH, canvasH) {
     const lit = Math.max(1, Math.floor(peak * SEGMENTS));
     const segH = meterH / SEGMENTS;
@@ -620,22 +647,28 @@ function startAudioMeters() {
   }
 
   function draw(now) {
-    const { w, h } = resize();
+    if (!state.preloaderRunning || !isPageActive()) {
+      state.metersRaf = null;
+      return;
+    }
+    if (now - lastFrame < frameInterval) {
+      state.metersRaf = requestAnimationFrame(draw);
+      return;
+    }
+    lastFrame = now;
+
+    const { w, h } = ensureLayout();
     ctx.clearRect(0, 0, w, h);
     ctx.fillStyle = '#141414';
     ctx.fillRect(0, 0, w, h);
 
     const pct = state.loadPct / 100;
-    const bounce = 0.12 + Math.sin(now * 0.014) * 0.1 + Math.sin(now * 0.031) * 0.06;
+    const bounce = 0.12 + Math.sin(now * 0.014) * 0.1;
     const basePeak = 0.22 + pct * 0.72 + bounce;
     const barW = Math.max(8, (w - 14) / 2);
     const meterH = h - BOTTOM - TOP;
-    const channels = [
-      { x: 5, peak: Math.min(1, basePeak * (0.88 + Math.sin(now * 0.019) * 0.22)) },
-      { x: 5 + barW + 5, peak: Math.min(1, basePeak * (0.84 + Math.cos(now * 0.017) * 0.24)) },
-    ];
-
-    channels.forEach((ch) => drawChannel(ch.x, barW, ch.peak, meterH, h));
+    drawChannel(5, barW, Math.min(1, basePeak * 0.92), meterH, h);
+    drawChannel(5 + barW + 5, barW, Math.min(1, basePeak * 0.88), meterH, h);
 
     state.metersRaf = requestAnimationFrame(draw);
   }
@@ -1025,7 +1058,7 @@ function setSlideBg(el, url) {
 }
 
 function animateLiquid(intensity = 85) {
-  if (reducedMotion() || !els.turbulence || !els.displacement) return Promise.resolve();
+  if (reducedMotion() || !isPageActive() || !els.turbulence || !els.displacement) return Promise.resolve();
 
   const turb = els.turbulence;
   const disp = els.displacement;
@@ -1080,6 +1113,7 @@ function startHeroSlideshow() {
 
   stopHeroSlideshow();
   state.heroTimer = setInterval(() => {
+    if (!isPageActive() || els.hero?.classList.contains('hidden')) return;
     transitionHero((state.heroIndex + 1) % slides.length);
   }, CONFIG.heroIntervalMs);
 }
@@ -1095,7 +1129,8 @@ function stopHeroSlideshow() {
 function buildDeckMedia(p) {
   if (p.type === 'youtube') {
     const start = youtubeStartForProject(p);
-    return `<iframe class="deck-yt-frame" src="${youtubeEmbed(p.media, start)}" title="${p.title}" tabindex="-1" allow="autoplay; encrypted-media" loading="eager"></iframe>`;
+    const embed = youtubeEmbed(p.media, start);
+    return `<div class="deck-yt-slot" data-embed="${embed}" data-title="${p.title.replace(/"/g, '&quot;')}"></div>`;
   }
   const imgs = projectImages(p);
   const list = imgs.length ? imgs : [p.media || FALLBACK_HERO];
@@ -1155,8 +1190,11 @@ function renderDeck() {
 
   if (els.deckDots) {
     els.deckDots.innerHTML = Array.from({ length: state.deckCount }, (_, i) =>
-      `<span class="deck-dot${i === 0 ? ' is-on' : ''}" data-idx="${i}" aria-hidden="true"></span>`
+      `<button type="button" class="deck-dot${i === 0 ? ' is-on' : ''}" data-goto="${i}" aria-label="Go to slide ${i + 1}"></button>`
     ).join('');
+    els.deckDots.querySelectorAll('.deck-dot').forEach((dot) => {
+      dot.addEventListener('click', () => goToDeckSlide(Number(dot.dataset.goto), true));
+    });
   }
 
   syncDeckSlideMetrics();
@@ -1194,6 +1232,27 @@ function updateDeckUI() {
   if (els.deckSequenceFill && state.deckCount > 1) {
     els.deckSequenceFill.style.width = `${((state.deckIndex + 1) / state.deckCount) * 100}%`;
   }
+
+  if (els.deckPrev) els.deckPrev.disabled = state.deckIndex <= 0;
+  if (els.deckNext) els.deckNext.disabled = state.deckIndex >= state.deckCount - 1;
+
+  syncDeckYoutubeMounts();
+}
+
+function syncDeckYoutubeMounts() {
+  if (!els.deckTrack) return;
+  els.deckTrack.querySelectorAll('.deck-slide--youtube').forEach((slide, i) => {
+    const slot = slide.querySelector('.deck-yt-slot');
+    if (!slot) return;
+    if (i === state.deckIndex) {
+      if (!slot.querySelector('iframe')) {
+        const title = slot.dataset.title || 'Video';
+        slot.innerHTML = `<iframe class="deck-yt-frame" src="${slot.dataset.embed}" title="${title}" tabindex="-1" allow="autoplay; encrypted-media" loading="lazy"></iframe>`;
+      }
+    } else if (slot.innerHTML) {
+      slot.innerHTML = '';
+    }
+  });
 }
 
 function syncDeckSlideMetrics() {
@@ -1223,12 +1282,15 @@ function applyDeckTransform(index, animate) {
   const h = state.deckViewportH || els.deckViewport?.clientHeight || window.innerHeight;
   const offset = vertical ? -index * h : -index * w;
 
-  els.deckTrack.style.transition = animate && !reducedMotion()
+  const moving = animate && !reducedMotion();
+  els.deckTrack.style.transition = moving
     ? `transform ${CONFIG.deckMoveMs}ms cubic-bezier(0.76, 0, 0.24, 1)`
     : 'none';
+  els.deckTrack.classList.toggle('is-moving', moving);
   els.deckTrack.style.transform = vertical
     ? `translate3d(0, ${offset}px, 0)`
     : `translate3d(${offset}px, 0, 0)`;
+  if (!moving) els.deckTrack.classList.remove('is-moving');
 }
 
 function setDeckPosition(index, animate) {
@@ -1238,6 +1300,7 @@ function setDeckPosition(index, animate) {
 }
 
 function clearDeckFx() {
+  PERF.reelAnimCancel += 1;
   const reel = els.deckFxReel;
   if (reel) {
     reel.classList.remove('is-active');
@@ -1251,13 +1314,17 @@ function easeInOutQuad(t) {
   return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 }
 
-function animateReelOpacity(from, to, ms) {
+function animateReelOpacity(from, to, ms, gen) {
   const reel = els.deckFxReel;
   if (!reel || ms <= 0) return Promise.resolve();
 
   return new Promise((resolve) => {
     const start = performance.now();
     const tick = (now) => {
+      if (gen !== PERF.reelAnimCancel) {
+        resolve();
+        return;
+      }
       const t = Math.min((now - start) / ms, 1);
       const eased = easeInOutQuad(t);
       reel.style.opacity = String(from + (to - from) * eased);
@@ -1300,6 +1367,7 @@ async function playDeckReelTransition(nextIndex) {
   }
 
   clearDeckFx();
+  const gen = PERF.reelAnimCancel;
   reel.classList.add('is-active');
   reel.style.transition = 'none';
   reel.style.opacity = '0';
@@ -1307,7 +1375,8 @@ async function playDeckReelTransition(nextIndex) {
   const peak = 0.38;
   const dip = 0.22;
 
-  await animateReelOpacity(0, peak, CONFIG.deckFxPreMs);
+  await animateReelOpacity(0, peak, CONFIG.deckFxPreMs, gen);
+  if (gen !== PERF.reelAnimCancel) return;
 
   setDeckPosition(nextIndex, true);
   const moveHalf = Math.floor(CONFIG.deckMoveMs * 0.55);
@@ -1315,14 +1384,17 @@ async function playDeckReelTransition(nextIndex) {
 
   await Promise.all([
     waitDeckMove(),
-    animateReelOpacity(peak, dip, moveHalf),
+    animateReelOpacity(peak, dip, moveHalf, gen),
   ]);
+  if (gen !== PERF.reelAnimCancel) return;
 
-  await animateReelOpacity(dip, peak * 0.55, moveRest);
-  await animateReelOpacity(peak * 0.55, 0, CONFIG.deckFxPostMs);
+  await animateReelOpacity(dip, peak * 0.55, moveRest, gen);
+  await animateReelOpacity(peak * 0.55, 0, CONFIG.deckFxPostMs, gen);
 
-  reel.classList.remove('is-active');
-  reel.style.opacity = '0';
+  if (gen === PERF.reelAnimCancel) {
+    reel.classList.remove('is-active');
+    reel.style.opacity = '0';
+  }
 }
 
 function stopGalleryCycle() {
@@ -1344,7 +1416,7 @@ function startGalleryCycle() {
   updateDeckUI();
 
   state.galleryTimer = setInterval(() => {
-    if (state.deckPaused || state.deckTransitioning) return;
+    if (!isPageActive() || state.deckPaused || state.deckTransitioning) return;
     frames[state.galleryIdx]?.classList.remove('is-on');
     state.galleryIdx = (state.galleryIdx + 1) % frames.length;
     frames[state.galleryIdx]?.classList.add('is-on');
@@ -1381,7 +1453,7 @@ function scheduleDeckAutoplay() {
   const hold = slideHoldDuration(slide);
 
   state.deckAutoplayTimer = setTimeout(async () => {
-    if (state.deckPaused || state.deckTransitioning) return;
+    if (!isPageActive() || state.deckPaused || state.deckTransitioning) return;
 
     if (state.deckIndex >= state.deckCount - 1) {
       if (CONFIG.deckLoop) {
@@ -1417,6 +1489,13 @@ async function goToDeckSlide(index, animate = true) {
   }
 }
 
+async function deckStep(delta) {
+  if (state.deckTransitioning || !state.deckCount) return;
+  const next = state.deckIndex + delta;
+  if (next < 0 || next >= state.deckCount) return;
+  await goToDeckSlide(next, true);
+}
+
 function toggleDeckPause() {
   state.deckPaused = !state.deckPaused;
   els.deckPause?.setAttribute('aria-pressed', String(state.deckPaused));
@@ -1433,14 +1512,83 @@ function toggleDeckPause() {
 }
 
 function initDeckInput() {
-  els.deckPause?.addEventListener('click', toggleDeckPause);
+  if (state.deckInputReady) return;
+  state.deckInputReady = true;
 
-  const onResize = () => {
+  els.deckPause?.addEventListener('click', toggleDeckPause);
+  els.deckPrev?.addEventListener('click', () => deckStep(-1));
+  els.deckNext?.addEventListener('click', () => deckStep(1));
+
+  const vp = els.deckViewport;
+  if (vp) {
+    vp.addEventListener(
+      'wheel',
+      (e) => {
+        if (els.journey?.classList.contains('hidden')) return;
+        const absX = Math.abs(e.deltaX);
+        const absY = Math.abs(e.deltaY);
+        if (absX < 14 && absY < 14) return;
+        if (isDeckMobile() && absY <= absX) return;
+        if (!isDeckMobile() && absX <= absY * 0.6) return;
+        e.preventDefault();
+        if (e.deltaX > 0 || e.deltaY > 0) deckStep(1);
+        else deckStep(-1);
+      },
+      { passive: false }
+    );
+
+    vp.addEventListener(
+      'touchstart',
+      (e) => {
+        state.touchStartX = e.changedTouches[0].clientX;
+        state.touchStartY = e.changedTouches[0].clientY;
+      },
+      { passive: true }
+    );
+
+    vp.addEventListener(
+      'touchend',
+      (e) => {
+        if (els.journey?.classList.contains('hidden')) return;
+        const dx = e.changedTouches[0].clientX - state.touchStartX;
+        const dy = e.changedTouches[0].clientY - state.touchStartY;
+        if (isDeckMobile()) {
+          if (Math.abs(dy) < 52 || Math.abs(dy) < Math.abs(dx)) return;
+          if (dy < 0) deckStep(1);
+          else deckStep(-1);
+        } else {
+          if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy)) return;
+          if (dx < 0) deckStep(1);
+          else deckStep(-1);
+        }
+      },
+      { passive: true }
+    );
+  }
+
+  const onResize = debounce(() => {
     if (els.journey?.classList.contains('hidden')) return;
     syncDeckSlideMetrics();
-  };
+  }, PERF.resizeDebounceMs);
   window.addEventListener('resize', onResize);
   window.matchMedia(MOBILE_PRELOADER_MQ).addEventListener('change', onResize);
+}
+
+function initPageVisibility() {
+  document.addEventListener('visibilitychange', () => {
+    if (isPageActive()) {
+      if (!els.hero?.classList.contains('hidden')) startHeroSlideshow();
+      if (!els.journey?.classList.contains('hidden') && !state.deckPaused) {
+        startGalleryCycle();
+        scheduleDeckAutoplay();
+      }
+      return;
+    }
+    stopDeckAutoplay();
+    stopGalleryCycle();
+    stopHeroSlideshow();
+    stopAudioMeters();
+  });
 }
 
 function enterJourney() {
@@ -1471,6 +1619,7 @@ function enterJourney() {
 function exitJourney() {
   stopDeckAutoplay();
   stopGalleryCycle();
+  els.deckTrack?.querySelectorAll('.deck-yt-slot').forEach((slot) => { slot.innerHTML = ''; });
   clearDeckFx();
   els.journey?.classList.add('hidden');
   els.journey?.classList.remove('is-playing', 'is-paused');
@@ -1524,6 +1673,8 @@ function initInput() {
       e.preventDefault();
       toggleDeckPause();
     }
+    if (e.key === 'ArrowRight') deckStep(1);
+    if (e.key === 'ArrowLeft') deckStep(-1);
   });
 }
 
@@ -1541,6 +1692,7 @@ function init() {
   els.exitJourney?.addEventListener('click', exitJourney);
 
   initInput();
+  initPageVisibility();
   runPreloader();
 }
 
