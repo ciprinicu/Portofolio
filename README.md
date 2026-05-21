@@ -8,7 +8,15 @@ npx serve .
 
 Open the URL shown (ES modules need a local server — `file://` will not work).
 
+`npm install` pins `@vercel/speed-insights` in `package.json`; the browser loads it from the import map (jsDelivr CDN).
+
 **Reset Preloader** (top-right) replays the intro.
+
+### Vercel Speed Insights
+
+1. In the [Vercel dashboard](https://vercel.com), open your project → **Speed Insights** → **Enable**.
+2. Deploy to Vercel. Metrics are collected in production (not on `localhost`).
+3. This site uses `injectSpeedInsights()` from `@vercel/speed-insights` in `js/analytics/speed-insights.js` — not the Next.js `SpeedInsights` component (`@vercel/speed-insights/next` is only for Next.js apps).
 
 ## Project layout
 

@@ -13,6 +13,7 @@ import {
   initInput,
 } from './deck/index.js';
 import { runPreloader, resetPreloader } from './preloader/index.js';
+import { initSpeedInsights } from './analytics/speed-insights.js';
 
 function init() {
   cacheElements();
@@ -31,6 +32,7 @@ function init() {
 
   initInput();
   initPageVisibility();
+  initSpeedInsights();
   runPreloader();
 }
 

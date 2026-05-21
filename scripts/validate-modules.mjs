@@ -9,7 +9,7 @@ async function walk(file, seen = new Set()) {
   if (seen.has(file)) return;
   seen.add(file);
   const code = fs.readFileSync(file, 'utf8');
-  const re = /from\s+['"](\.\/[^'"]+)['"]/g;
+  const re = /from\s+['"](\.\.?\/[^'"]+)['"]/g;
   let m;
   while ((m = re.exec(code))) {
     let target = path.resolve(path.dirname(file), m[1]);
