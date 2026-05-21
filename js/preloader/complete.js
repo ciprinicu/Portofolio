@@ -1,11 +1,12 @@
-import { els, state } from '../core/state.js';
 import { stopPreloaderLoop } from './loop.js';
-import { clearZoomTimer, revealSite } from './transition.js';
+import { zoomIntoProgram } from './transition.js';
 
-/** Assets ready — show the site immediately (no zoom / no minimum wait). */
+/**
+ * Assets ready — kick off the cinematic zoom transition.
+ * Desktop: zooms into the Premiere program monitor → hero.
+ * (Mobile has its own mobileZoomReveal path in mobile.js.)
+ */
 export function completePreloader() {
   stopPreloaderLoop();
-  clearZoomTimer();
-  revealSite({ instant: true });
-  els.preloaderMobile?.setAttribute('aria-hidden', 'true');
+  zoomIntoProgram();
 }
