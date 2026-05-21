@@ -64,6 +64,20 @@ Each project can include an `images: [...]` array with **any number** of image U
 
 YouTube projects use `type: 'youtube'` and `media` (watch URL).
 
+**Start later in the video** (skip intro) — either:
+
+```javascript
+{
+  type: 'youtube',
+  media: 'https://youtu.be/VIDEO_ID',
+  youtubeStart: 90,           // seconds
+  // youtubeStart: '1m30',     // or 1 min 30 sec
+  // media: 'https://youtu.be/VIDEO_ID?t=90',  // or ?t=1m30s on the link
+}
+```
+
+The embed uses YouTube’s `start=` parameter (seconds from the beginning).
+
 
 
 ### `TIMING` — edit all durations in one place (ms)

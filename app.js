@@ -10,11 +10,12 @@
 const PROJECTS = [
   {
     id: 'testing1',//not displayed
-    category: 'Testing2',//Displayed on top of the title
-    title: 'Test title',//Big text Title
-    description: 'Lorem ipsum dolor sit amet',//Description below title
+    category: 'Car Videography',//Displayed on top of the title
+    title: 'A night out in Constanta',//Big text Title
+    description: 'This short montage shows the true wonders of the Constanta city in Romania. It shows the wonders of car enthusiasts.',//Description below title
     type: 'youtube',//Type
-    media: 'https://youtu.be/KfnDJxuzy_M',//Link
+    media: 'https://youtu.be/KfnDJxuzy_M?t=10',//Link
+    // youtubeStart: 45,  // optional: seconds, "1m30", or use ?t=45 on the URL
     images: [
       //'https://images.unsplash.com/photo-1487958449943-2429e8be8627?w=1920&q=85',
       //'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1920&q=85',
@@ -39,7 +40,7 @@ const PROJECTS = [
     title: 'Pulse & Ceremony',
     description: 'Weddings, festivals, and live performance captured with cinematic rhythm.',
     type: 'youtube',
-    media: 'https://youtu.be/QF7jhiKabMA',
+    media: 'https://youtu.be/QF7jhiKabMA?t=15',
     images: [
       'https://images.unsplash.com/photo-1511578314322-379afb476865?w=1920&q=85',
       'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1920&q=85',
@@ -65,7 +66,8 @@ const PROJECTS = [
     title: 'Structural Light',
     description: 'Architecture and interiors framed with geometric precision.',
     type: 'youtube',
-    media: 'https://youtu.be/oWZhconmblA?t=180',
+    media: 'https://youtu.be/oWZhconmblA',
+    youtubeStart: 200, // 3:00 — skip intro (or use media: '...?t=180')
     images: [
       'https://images.unsplash.com/photo-1487958449943-2429e8be8627?w=1920&q=85',
       'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1920&q=85',
@@ -295,15 +297,61 @@ function getYouTubeId(url) {
   return m ? m[1] : url.length === 11 ? url : '';
 }
 
-function youtubeEmbed(url) {
+/**
+ * Start offset in seconds. Accepts:
+ * - number: 90
+ * - string: "90", "1m30", "1m30s", "2h15m"
+ * - URL with ?t=90 or ?t=1m30s (also read from media link)
+ */
+function parseYoutubeStart(value) {
+  if (value == null || value === '') return 0;
+  if (typeof value === 'number' && value >= 0) return Math.floor(value);
+
+  let s = String(value).trim();
+  const fromUrl = s.match(/[?&#]t=([^&#]+)/i);
+  if (fromUrl) s = decodeURIComponent(fromUrl[1]);
+
+  if (/^\d+$/.test(s)) return parseInt(s, 10);
+
+  let total = 0;
+  const hours = s.match(/(\d+)h/i);
+  const mins = s.match(/(\d+)m/i);
+  const secs = s.match(/(\d+)s/i);
+  if (hours) total += parseInt(hours[1], 10) * 3600;
+  if (mins) total += parseInt(mins[1], 10) * 60;
+  if (secs) total += parseInt(secs[1], 10);
+  if (total > 0) return total;
+
+  const leadingNum = s.match(/^(\d+)/);
+  return leadingNum ? parseInt(leadingNum[1], 10) : 0;
+}
+
+function youtubeStartForProject(p) {
+  if (p.youtubeStart != null) return parseYoutubeStart(p.youtubeStart);
+  return parseYoutubeStart(p.media);
+}
+
+function youtubeEmbed(url, startSeconds = 0) {
   const id = getYouTubeId(url);
   if (!id) return '';
+  const start = Math.max(0, Math.floor(startSeconds));
   const q = new URLSearchParams({
-    autoplay: '1', mute: '1', loop: '1', playlist: id,
-    controls: '0', modestbranding: '1', rel: '0', playsinline: '1',
-    t: (url.includes("oWZhconmblA")?"t=180":"t=0")
+    autoplay: '1',
+    mute: '1',
+    loop: '1',
+    playlist: id,
+    controls: '0',
+    disablekb: '1',
+    fs: '0',
+    modestbranding: '1',
+    rel: '0',
+    playsinline: '1',
+    iv_load_policy: '3',
+    cc_load_policy: '0',
+    enablejsapi: '0',
   });
-  return `https://www.youtube.com/embed/${id}?${q}`;
+  if (start > 0) q.set('start', String(start));
+  return `https://www.youtube-nocookie.com/embed/${id}?${q}`;
 }
 
 function reducedMotion() {
@@ -1046,7 +1094,8 @@ function stopHeroSlideshow() {
 // =============================================================================
 function buildDeckMedia(p) {
   if (p.type === 'youtube') {
-    return `<iframe src="${youtubeEmbed(p.media)}" controls=0 modestbranding=1 rel=0 title="${p.title}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+    const start = youtubeStartForProject(p);
+    return `<iframe class="deck-yt-frame" src="${youtubeEmbed(p.media, start)}" title="${p.title}" tabindex="-1" allow="autoplay; encrypted-media" loading="eager"></iframe>`;
   }
   const imgs = projectImages(p);
   const list = imgs.length ? imgs : [p.media || FALLBACK_HERO];
