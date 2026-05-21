@@ -1,5 +1,6 @@
 import { CONFIG, PERF, SEQUENCE_DURATION_TC, SEQUENCE_FPS } from '../config/timing.js';
 import { heroImages } from '../data/portfolio.js';
+import { heroImageUrl, thumbImageUrl } from '../core/images.js';
 import { els, state } from '../core/state.js';
 import { formatSourceTimecode, formatTimecodeFromProgress, isPageActive, pad, reducedMotion } from '../core/utils.js';
 import { stopPreloaderLoop } from './loop.js';
@@ -24,7 +25,7 @@ export function buildMediaBin() {
       .slice(0, 6)
       .map(
         (src, i) => `
-      <div class="pp-bin-item${i === 0 ? ' is-active' : ''}" data-idx="${i}" style="background-image:url('${src}')">
+      <div class="pp-bin-item${i === 0 ? ' is-active' : ''}" data-idx="${i}" style="background-image:url('${thumbImageUrl(src)}')">
         <span class="pp-badge">${(2 + Math.random() * 8).toFixed(1)}s</span>
         <span>CLIP_${pad(i + 1)}.mxf</span>
       </div>`
@@ -56,7 +57,7 @@ export function setMonitorSlide(target, url, layer) {
   };
   const el = map[target]?.[layer];
   if (el) {
-    el.style.backgroundImage = `url("${url}")`;
+    el.style.backgroundImage = `url("${heroImageUrl(url)}")`;
     el.classList.add('is-on');
   }
   const otherLayer = layer === 'a' ? 'b' : 'a';

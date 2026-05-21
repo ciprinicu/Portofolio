@@ -2,7 +2,9 @@
  * CIPRI — entry point. Edit content in js/config/ and js/data/.
  */
 import { cacheElements } from './core/dom.js';
+import { warmLcpImages } from './core/images.js';
 import { els } from './core/state.js';
+import { heroImages } from './data/portfolio.js';
 import { openDrawer, closeDrawer, renderDrawer } from './drawer.js';
 import {
   renderDeck,
@@ -14,6 +16,8 @@ import {
 } from './deck/index.js';
 import { runPreloader, resetPreloader } from './preloader/index.js';
 import { initSpeedInsights } from './analytics/speed-insights.js';
+
+warmLcpImages(heroImages());
 
 function init() {
   cacheElements();
@@ -32,8 +36,13 @@ function init() {
 
   initInput();
   initPageVisibility();
-  initSpeedInsights();
   runPreloader();
+}
+
+if ('requestIdleCallback' in window) {
+  requestIdleCallback(() => initSpeedInsights(), { timeout: 4000 });
+} else {
+  window.addEventListener('load', () => initSpeedInsights(), { once: true });
 }
 
 if (document.readyState === 'loading') {

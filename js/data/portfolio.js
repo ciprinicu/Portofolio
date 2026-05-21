@@ -1,5 +1,6 @@
 import { PROJECTS } from '../config/projects.js';
 import { FALLBACK_HERO } from '../config/timing.js';
+import { heroImageUrl } from '../core/images.js';
 
 export function projectImages(p) {
   if (p.images?.length) return p.images;
@@ -9,8 +10,8 @@ export function projectImages(p) {
 
 export function allPortfolioImages() {
   const urls = [];
-  PROJECTS.forEach((p) => projectImages(p).forEach((u) => urls.push(u)));
-  return urls.length ? urls : [FALLBACK_HERO];
+  PROJECTS.forEach((p) => projectImages(p).forEach((u) => urls.push(heroImageUrl(u))));
+  return urls.length ? urls : [heroImageUrl(FALLBACK_HERO)];
 }
 
 export const HERO_SLIDES = allPortfolioImages();

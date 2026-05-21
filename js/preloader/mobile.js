@@ -1,5 +1,6 @@
 import { CONFIG } from '../config/timing.js';
 import { heroImages } from '../data/portfolio.js';
+import { heroImageUrl } from '../core/images.js';
 import { els, state } from '../core/state.js';
 import { isPageActive, reducedMotion } from '../core/utils.js';
 import { clearZoomTimer, finishZoomTransition, revealSite } from './transition.js';
@@ -209,7 +210,7 @@ export function runMobilePreloader() {
   state.mobileGrade = { exposure: 0, contrast: 0, highlights: 0, shadows: 0, saturation: 0 };
   const img = heroImages()[0];
   if (els.lrPhoto) {
-    els.lrPhoto.style.backgroundImage = `url("${img}")`;
+    els.lrPhoto.style.backgroundImage = `url("${heroImageUrl(img)}")`;
     els.lrPhoto.style.filter = mobileDevelopFilter(state.mobileGrade);
   }
   LR_MOBILE_SLIDERS.forEach((s) => setLrSliderUI(s, 0));

@@ -2,6 +2,7 @@ import { PROJECTS } from '../config/projects.js';
 import { CONTACT } from '../config/contact.js';
 import { CONFIG, FALLBACK_HERO, MOBILE_PRELOADER_MQ, PERF } from '../config/timing.js';
 import { projectImages } from '../data/portfolio.js';
+import { heroImageUrl } from '../core/images.js';
 import { els, state } from '../core/state.js';
 import {
   debounce,
@@ -23,7 +24,7 @@ export function buildDeckMedia(p) {
   const imgs = projectImages(p);
   const list = imgs.length ? imgs : [p.media || FALLBACK_HERO];
   return `<div class="deck-gallery" data-count="${list.length}">
-    ${list.map((src, i) => `<div class="deck-gallery-slide${i === 0 ? ' is-on' : ''}" data-idx="${i}" style="background-image:url('${src}')" role="img" aria-label="${p.title} — ${i + 1} of ${list.length}"></div>`).join('')}
+    ${list.map((src, i) => `<div class="deck-gallery-slide${i === 0 ? ' is-on' : ''}" data-idx="${i}" style="background-image:url('${heroImageUrl(src)}')" role="img" aria-label="${p.title} — ${i + 1} of ${list.length}"></div>`).join('')}
   </div>`;
 }
 

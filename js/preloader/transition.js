@@ -109,6 +109,11 @@ export function revealSite() {
     }
 
     state.preloaderRunning = false;
+    try {
+      sessionStorage.setItem('cipri:preloader-done', '1');
+    } catch {
+      /* ignore */
+    }
     startHeroSlideshow();
   };
 

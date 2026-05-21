@@ -49,4 +49,6 @@ export const PERF = {
   meterFps: 24,
   resizeDebounceMs: 120,
   reelAnimCancel: 0,
+  /** Same-tab return visits: skip preloader animation (much better LCP). */
+  skipPreloaderIfSeen: true,
 };
