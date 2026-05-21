@@ -5,8 +5,8 @@ export const SEQUENCE_FPS = 23.976;
 export const SEQUENCE_DURATION_TC = '00:00:27:17';
 
 export const TIMING = {
-  preloaderDesktop: 3600,
-  preloaderMobile: 3200,
+  /** Safety cap only — preloader hides when assets load, not after this delay */
+  preloaderMaxWait: 25000,
   preloaderZoomDesktop: 950,
   preloaderZoomMobile: 780,
   heroSlide: 5800,
@@ -24,8 +24,7 @@ export const TIMING = {
 };
 
 export const CONFIG = {
-  preloaderMs: TIMING.preloaderDesktop,
-  mobilePreloaderMs: TIMING.preloaderMobile,
+  preloaderMaxWaitMs: TIMING.preloaderMaxWait,
   zoomMs: TIMING.preloaderZoomDesktop,
   mobileZoomMs: TIMING.preloaderZoomMobile,
   heroIntervalMs: TIMING.heroSlide,

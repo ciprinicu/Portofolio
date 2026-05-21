@@ -1,9 +1,7 @@
-import { CONFIG } from '../config/timing.js';
 import { heroImages } from '../data/portfolio.js';
 import { heroImageUrl } from '../core/images.js';
 import { els, state } from '../core/state.js';
-import { isPageActive, reducedMotion } from '../core/utils.js';
-import { clearZoomTimer, finishZoomTransition, revealSite } from './transition.js';
+import { trackSiteLoad } from './load-gate.js';
 import { stopPreloaderLoop } from './loop.js';
 
 export const LR_MOBILE_SLIDERS = [
@@ -90,8 +88,35 @@ export function runMobileRandomDevelop() {
   const duration = reducedMotion() ? 1200 : CONFIG.mobilePreloaderMs;
   const start = performance.now();
   let lastRetarget = 0;
+  let _revealScheduled = false;
+
+  // Snap animation to 100% and trigger reveal (called by either the
+  // animation loop finishing OR assets loading — whichever wins first).
+  function scheduleReveal() {
+    if (_revealScheduled) return;
+    _revealScheduled = true;
+    stopMobilePreloaderLoop();
+    Object.assign(state.mobileGrade, LR_FINAL_GRADE);
+    LR_MOBILE_SLIDERS.forEach((s) => setLrSliderUI(s, LR_FINAL_GRADE[s.key]));
+    applyMobileGradeToPhoto();
+    if (els.lrPct) els.lrPct.textContent = '100%';
+    if (els.lrMeta) els.lrMeta.textContent = 'CIPRI · After';
+    if (els.lrStatus) els.lrStatus.textContent = 'Export complete';
+    mobileZoomReveal();
+  }
+
+  // Race: assets ready → reveal immediately, no wait for animation.
+  trackSiteLoad((pct) => {
+    if (_revealScheduled) return;
+    state.loadPct = pct;
+    if (els.lrPct) els.lrPct.textContent = `${Math.round(pct)}%`;
+  }).then(() => {
+    if (!state.preloaderRunning) return;
+    scheduleReveal();
+  });
 
   function frame(now) {
+    if (_revealScheduled) return; // assets already won the race
     const elapsed = now - start;
     const t = Math.min(elapsed / duration, 1);
     const master = 1 - Math.pow(1 - t, 2.05);
@@ -131,11 +156,8 @@ export function runMobileRandomDevelop() {
     if (t < 1) {
       state.preloaderRaf = requestAnimationFrame(frame);
     } else {
-      Object.assign(state.mobileGrade, LR_FINAL_GRADE);
-      LR_MOBILE_SLIDERS.forEach((s) => setLrSliderUI(s, LR_FINAL_GRADE[s.key]));
-      applyMobileGradeToPhoto();
-      stopMobilePreloaderLoop();
-      mobileZoomReveal();
+      // Animation finished before assets — let scheduleReveal take over.
+      scheduleReveal();
     }
   }
 

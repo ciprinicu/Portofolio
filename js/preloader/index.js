@@ -3,14 +3,14 @@ import { els, state } from '../core/state.js';
 import { isMobilePreloader, reducedMotion } from '../core/utils.js';
 import { runDesktopPreloader } from './desktop.js';
 import { runMobilePreloader } from './mobile.js';
-import { clearZoomTimer, handoffPreviewToHero, revealSite } from './transition.js';
+import { clearZoomTimer, revealSite } from './transition.js';
 import { stopPreloaderLoop } from './loop.js';
 import {
   clearDeckFx,
   stopDeckAutoplay,
   stopGalleryCycle,
 } from '../deck/index.js';
-import { stopHeroSlideshow, startHeroSlideshow } from '../hero/index.js';
+import { stopHeroSlideshow } from '../hero/index.js';
 
 function shouldSkipPreloader() {
   if (reducedMotion()) return true;
@@ -22,18 +22,12 @@ function shouldSkipPreloader() {
   }
 }
 
-/** Return visit or reduced motion — show hero immediately (better LCP). */
+/** Return visit or reduced motion — show hero immediately. */
 export function quickReveal() {
   stopPreloaderLoop();
-  els.preloader?.classList.add('is-done', 'hidden');
-  els.preloader?.setAttribute('aria-hidden', 'true');
+  clearZoomTimer();
+  revealSite({ instant: true });
   els.preloaderMobile?.setAttribute('aria-hidden', 'true');
-  handoffPreviewToHero();
-  document.body.classList.add('is-ready');
-  els.hero?.classList.remove('hidden');
-  els.hero?.setAttribute('aria-hidden', 'false');
-  state.preloaderRunning = false;
-  startHeroSlideshow();
 }
 
 export function runPreloader() {

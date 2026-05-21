@@ -1,10 +1,11 @@
-import { CONFIG, PERF, SEQUENCE_DURATION_TC, SEQUENCE_FPS } from '../config/timing.js';
+import { PERF, SEQUENCE_DURATION_TC, SEQUENCE_FPS } from '../config/timing.js';
 import { heroImages } from '../data/portfolio.js';
 import { heroImageUrl, thumbImageUrl } from '../core/images.js';
 import { els, state } from '../core/state.js';
-import { formatSourceTimecode, formatTimecodeFromProgress, isPageActive, pad, reducedMotion } from '../core/utils.js';
+import { formatSourceTimecode, formatTimecodeFromProgress, isPageActive, pad } from '../core/utils.js';
+import { completePreloader } from './complete.js';
+import { trackSiteLoad } from './load-gate.js';
 import { stopPreloaderLoop } from './loop.js';
-import { zoomIntoProgram } from './transition.js';
 
 export function buildTimelineRuler() {
   if (!els.timelineRuler) return;
@@ -224,24 +225,11 @@ export function runDesktopPreloader() {
   updatePreloaderUI(0, 0);
   if (els.programDur) els.programDur.textContent = SEQUENCE_DURATION_TC;
 
-  state.loadDuration = reducedMotion() ? 900 : CONFIG.preloaderMs;
-  state.loadStart = performance.now();
-
-  function tick(now) {
-    const elapsed = now - state.loadStart;
-    const t = Math.min(elapsed / state.loadDuration, 1);
-    const eased = 1 - Math.pow(1 - t, 2.15);
-    const pct = eased * 100;
-
-    updatePreloaderUI(pct, elapsed);
-
-    if (t < 1) {
-      state.preloaderRaf = requestAnimationFrame(tick);
-    } else {
-      stopPreloaderLoop();
-      zoomIntoProgram();
-    }
-  }
-
-  state.preloaderRaf = requestAnimationFrame(tick);
+  trackSiteLoad((pct) => {
+    if (!state.preloaderRunning) return;
+    updatePreloaderUI(pct, 0);
+  }).then(() => {
+    if (!state.preloaderRunning) return;
+    completePreloader();
+  });
 }

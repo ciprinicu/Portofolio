@@ -54,3 +54,18 @@ export function warmLcpImages(urls = []) {
   if (list[0]) preloadImage(list[0], { high: true });
   if (list[1]) preloadImage(list[1]);
 }
+
+/** Resolves when decoded (or on error — never blocks forever). */
+export function whenImageLoaded(url) {
+  if (!url) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const finish = () => resolve();
+    img.onload = finish;
+    img.onerror = finish;
+    img.decoding = 'async';
+    img.src = url;
+    if (img.complete && img.naturalWidth > 0) finish();
+  });
+}

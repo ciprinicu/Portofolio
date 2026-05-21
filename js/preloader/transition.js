@@ -83,15 +83,13 @@ export function zoomIntoProgram() {
   state.zoomFallbackTimer = setTimeout(finishZoomTransition, CONFIG.zoomMs + 150);
 }
 
-export function revealSite() {
+export function revealSite({ instant = false } = {}) {
   clearZoomTimer();
   handoffPreviewToHero();
 
   document.body.classList.add('is-ready');
   els.hero?.classList.remove('hidden');
   els.hero?.setAttribute('aria-hidden', 'false');
-
-  els.preloader?.classList.add('is-revealing');
 
   const cleanup = () => {
     els.preloader?.classList.remove('is-zooming', 'is-revealing');
@@ -117,10 +115,12 @@ export function revealSite() {
     startHeroSlideshow();
   };
 
-  if (reducedMotion()) {
+  if (instant || reducedMotion()) {
     cleanup();
     return;
   }
+
+  els.preloader?.classList.add('is-revealing');
 
   els.preloader?.addEventListener(
     'transitionend',
