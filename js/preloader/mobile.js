@@ -3,6 +3,9 @@ import { heroImageUrl } from '../core/images.js';
 import { els, state } from '../core/state.js';
 import { trackSiteLoad } from './load-gate.js';
 import { stopPreloaderLoop } from './loop.js';
+import { reducedMotion } from '../core/utils.js';
+import { clearZoomTimer, revealSite, finishZoomTransition } from './transition.js';
+import { CONFIG } from '../config/timing.js';
 
 export const LR_MOBILE_SLIDERS = [
   { key: 'exposure', fill: 'lrFillExposure', thumb: 'lrThumbExposure', val: 'lrValExposure' },

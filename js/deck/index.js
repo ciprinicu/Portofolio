@@ -1,7 +1,7 @@
 import { PROJECTS } from '../config/projects.js';
 import { CONTACT } from '../config/contact.js';
 import { CONFIG, FALLBACK_HERO, MOBILE_PRELOADER_MQ, PERF } from '../config/timing.js';
-import { projectImages } from '../data/portfolio.js';
+import { projectImages, allPortfolioImages } from '../data/portfolio.js';
 import { heroImageUrl } from '../core/images.js';
 import { els, state } from '../core/state.js';
 import {
@@ -46,12 +46,41 @@ export function renderDeck() {
     }
   ).join('');
 
+  const allImgs = allPortfolioImages();
+  let shuffledImgs = [...allImgs].sort(() => Math.random() - 0.5);
+  let finalImgs = [];
+  while (finalImgs.length < 90) {
+    finalImgs = finalImgs.concat(shuffledImgs);
+  }
+  finalImgs = finalImgs.slice(0, 90);
+  
+  for (let i = 1; i < finalImgs.length; i++) {
+    if (finalImgs[i] === finalImgs[i - 1] && i + 1 < finalImgs.length) {
+      const temp = finalImgs[i];
+      finalImgs[i] = finalImgs[i + 1];
+      finalImgs[i + 1] = temp;
+    }
+  }
+
+  const tilesHtml = finalImgs.map((src, i) => {
+    const left = (i * (100 / 90)) + (Math.random() * 2 - 1); 
+    const size = 100 + Math.random() * 140;
+    const duration = 15 + Math.random() * 30;
+    const delay = -(Math.random() * 50).toFixed(2);
+    return `<div class="matrix-tile" style="background-image:url('${src}'); left:${left}%; width:${size}px; animation-duration:${duration}s; animation-delay:${delay}s;"></div>`;
+  }).join('');
+
   const pitchSlide = `
-    <article class="deck-slide deck-slide--pitch" data-index="${PROJECTS.length}" data-type="pitch" data-category="Contact">
-      <div class="pitch-bg" aria-hidden="true"></div>
-      <div class="pitch-inner">
-        <p class="pitch-tagline">${CONTACT.tagline}</p>
-        <h2 class="pitch-headline font-display">LET'S CREATE</h2>
+    <article class="deck-slide deck-slide--pitch scene-matrix" data-index="${PROJECTS.length}" data-type="pitch" data-category="Contact">
+      <div class="matrix-bg" aria-hidden="true">
+        <div class="matrix-collage">
+          ${tilesHtml}
+        </div>
+        <div class="matrix-vignette"></div>
+      </div>
+      <div class="matrix-contact">
+        <p class="tagline">${CONTACT.tagline}</p>
+        <h2 class="font-display">LET'S CREATE</h2>
         <p class="pitch-sub">Available for commissions, ESAD placements &amp; industry roles.</p>
         <div class="pitch-grid">
           <a class="pitch-card" href="mailto:${CONTACT.email}">
@@ -130,10 +159,10 @@ export function updateDeckUI() {
 
 export function syncDeckYoutubeMounts() {
   if (!els.deckTrack) return;
-  els.deckTrack.querySelectorAll('.deck-slide--youtube').forEach((slide, i) => {
+  els.deckTrack.querySelectorAll('.deck-slide--youtube').forEach((slide) => {
     const slot = slide.querySelector('.deck-yt-slot');
     if (!slot) return;
-    if (i === state.deckIndex) {
+    if (Number(slide.dataset.index) === state.deckIndex) {
       if (!slot.querySelector('iframe')) {
         const title = slot.dataset.title || 'Video';
         slot.innerHTML = `<iframe class="deck-yt-frame" src="${slot.dataset.embed}" title="${title}" tabindex="-1" allow="autoplay; encrypted-media" loading="lazy"></iframe>`;
