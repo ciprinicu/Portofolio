@@ -1,6 +1,6 @@
 import { PERF, SEQUENCE_DURATION_TC, SEQUENCE_FPS } from '../config/timing.js';
 import { heroImages } from '../data/portfolio.js';
-import { heroImageUrl, thumbImageUrl } from '../core/images.js';
+import { loadWithBlurPlaceholder } from '../core/images.js';
 import { els, state } from '../core/state.js';
 import { formatSourceTimecode, formatTimecodeFromProgress, isPageActive, pad } from '../core/utils.js';
 import { completePreloader } from './complete.js';
@@ -26,12 +26,16 @@ export function buildMediaBin() {
       .slice(0, 6)
       .map(
         (src, i) => `
-      <div class="pp-bin-item${i === 0 ? ' is-active' : ''}" data-idx="${i}" style="background-image:url('${thumbImageUrl(src)}')">
+      <div class="pp-bin-item${i === 0 ? ' is-active' : ''}" data-idx="${i}" data-src="${src}">
         <span class="pp-badge">${(2 + Math.random() * 8).toFixed(1)}s</span>
         <span>CLIP_${pad(i + 1)}.mxf</span>
       </div>`
       )
       .join('');
+
+    els.mediaBin.querySelectorAll('.pp-bin-item').forEach(el => {
+      loadWithBlurPlaceholder(el, el.dataset.src, true);
+    });
   }
 
   if (els.mediaList) {
@@ -58,7 +62,7 @@ export function setMonitorSlide(target, url, layer) {
   };
   const el = map[target]?.[layer];
   if (el) {
-    el.style.backgroundImage = `url("${heroImageUrl(url)}")`;
+    loadWithBlurPlaceholder(el, url);
     el.classList.add('is-on');
   }
   const otherLayer = layer === 'a' ? 'b' : 'a';

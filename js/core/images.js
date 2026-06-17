@@ -27,6 +27,23 @@ export function thumbImageUrl(url) {
   return optimizeImageUrl(url, { preset: 'thumb' });
 }
 
+export function blurImageUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  if (url.includes('images.unsplash.com')) {
+    const u = new URL(url);
+    u.searchParams.set('w', '50');
+    u.searchParams.set('q', '10');
+    u.searchParams.set('auto', 'format');
+    u.searchParams.set('fit', 'crop');
+    return u.toString();
+  }
+  // Local file
+  const ext = url.substring(url.lastIndexOf('.'));
+  if (!ext || ext.length > 5) return url;
+  const base = url.substring(0, url.lastIndexOf('.'));
+  return `${base}-thumb${ext}`;
+}
+
 const warmed = new Set();
 
 /** Preload/decoding hint — call early for LCP candidates. */
@@ -68,4 +85,27 @@ export function whenImageLoaded(url) {
     img.src = url;
     if (img.complete && img.naturalWidth > 0) finish();
   });
+}
+
+export function loadWithBlurPlaceholder(el, rawUrl, isThumb = false) {
+  if (!el || !rawUrl) return;
+  const blurUrl = blurImageUrl(rawUrl);
+  const highUrl = isThumb ? thumbImageUrl(rawUrl) : heroImageUrl(rawUrl);
+
+  // Set blur placeholder first
+  el.style.backgroundImage = `url("${blurUrl}")`;
+  el.classList.add('is-blur-placeholder');
+
+  // Load high res
+  const img = new Image();
+  img.decoding = 'async';
+  img.onload = () => {
+    // Only update if it hasn't been changed by another call
+    if (el.dataset.loadingUrl === highUrl) {
+      el.style.backgroundImage = `url("${highUrl}")`;
+      el.classList.remove('is-blur-placeholder');
+    }
+  };
+  el.dataset.loadingUrl = highUrl;
+  img.src = highUrl;
 }

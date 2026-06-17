@@ -1,6 +1,6 @@
 import { CONFIG } from '../config/timing.js';
-import { heroImages } from '../data/portfolio.js';
-import { heroImageUrl, whenImageLoaded } from '../core/images.js';
+import { allPortfolioImages } from '../data/portfolio.js';
+import { blurImageUrl, heroImageUrl, whenImageLoaded } from '../core/images.js';
 
 function whenPageReady() {
   if (document.readyState === 'complete') return Promise.resolve();
@@ -37,9 +37,10 @@ export function trackSiteLoad(onProgress) {
     onProgress?.(n);
   };
 
-  const criticalImages = heroImages()
-    .slice(0, 2)
-    .map((u) => heroImageUrl(u));
+  const allImages = allPortfolioImages();
+  const thumbImages = allImages.map(u => blurImageUrl(u));
+  const highResCritical = allImages.slice(0, 2).map(u => heroImageUrl(u));
+  const criticalImages = [...new Set([...thumbImages, ...highResCritical])];
 
   const work = (async () => {
     report(4);

@@ -1,5 +1,5 @@
 import { heroImages } from '../data/portfolio.js';
-import { heroImageUrl } from '../core/images.js';
+import { loadWithBlurPlaceholder } from '../core/images.js';
 import { els, state } from '../core/state.js';
 import { trackSiteLoad } from './load-gate.js';
 import { stopPreloaderLoop } from './loop.js';
@@ -235,7 +235,7 @@ export function runMobilePreloader() {
   state.mobileGrade = { exposure: 0, contrast: 0, highlights: 0, shadows: 0, saturation: 0 };
   const img = heroImages()[0];
   if (els.lrPhoto) {
-    els.lrPhoto.style.backgroundImage = `url("${heroImageUrl(img)}")`;
+    loadWithBlurPlaceholder(els.lrPhoto, img);
     els.lrPhoto.style.filter = mobileDevelopFilter(state.mobileGrade);
   }
   LR_MOBILE_SLIDERS.forEach((s) => setLrSliderUI(s, 0));

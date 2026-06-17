@@ -42,3 +42,7 @@ body {
 .hidden { display: none !important; }
 .svg-filters { position: absolute; width: 0; height: 0; overflow: hidden; }
 
+.is-blur-placeholder {
+  filter: blur(15px) saturate(1.2) !important;
+  transition: filter 0.4s ease-out !important;
+}

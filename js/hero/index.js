@@ -1,11 +1,11 @@
 import { CONFIG } from '../config/timing.js';
 import { heroImages } from '../data/portfolio.js';
-import { heroImageUrl } from '../core/images.js';
+import { loadWithBlurPlaceholder } from '../core/images.js';
 import { els, state } from '../core/state.js';
 import { isPageActive, reducedMotion } from '../core/utils.js';
 
 export function setSlideBg(el, url) {
-  if (el) el.style.backgroundImage = `url("${heroImageUrl(url)}")`;
+  loadWithBlurPlaceholder(el, url);
 }
 
 export function animateLiquid(intensity = 85) {
