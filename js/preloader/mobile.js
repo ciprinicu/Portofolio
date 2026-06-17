@@ -103,7 +103,7 @@ export function runMobileRandomDevelop() {
     LR_MOBILE_SLIDERS.forEach((s) => setLrSliderUI(s, LR_FINAL_GRADE[s.key]));
     applyMobileGradeToPhoto();
     if (els.lrPct) els.lrPct.textContent = '100%';
-    if (els.lrMeta) els.lrMeta.textContent = 'CIPRI · After';
+    if (els.lrMeta) els.lrMeta.textContent = 'CIPRIAN MIHAI NICULAE · After';
     if (els.lrStatus) els.lrStatus.textContent = 'Export complete';
     mobileZoomReveal();
   }
@@ -151,7 +151,7 @@ export function runMobileRandomDevelop() {
 
     state.loadPct = t * 100;
     if (els.lrPct) els.lrPct.textContent = `${Math.round(t * 100)}%`;
-    if (els.lrMeta) els.lrMeta.textContent = t < 0.15 ? 'RAW · Before' : 'CIPRI · After';
+    if (els.lrMeta) els.lrMeta.textContent = t < 0.15 ? 'RAW · Before' : 'CIPRIAN MIHAI NICULAE · After';
     if (els.lrStatus) {
       els.lrStatus.textContent = t < 0.2 ? 'Loading RAW…' : t < 0.92 ? 'Developing…' : 'Export complete';
     }
@@ -174,7 +174,7 @@ export function mobileZoomReveal() {
     return;
   }
 
-  if (els.lrMeta) els.lrMeta.textContent = 'CIPRI · After';
+  if (els.lrMeta) els.lrMeta.textContent = 'CIPRIAN MIHAI NICULAE · After';
   if (els.lrStatus) els.lrStatus.textContent = 'Export complete';
   clearZoomTimer();
   els.preloader?.classList.remove('is-revealing', 'is-done');

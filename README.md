@@ -1,4 +1,4 @@
-# CIPRI — Visual Artist & Filmmaker
+# CIPRIAN MIHAI NICULAE — Visual Artist & Filmmaker
 
 ## Run
 
