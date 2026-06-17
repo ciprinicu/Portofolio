@@ -87,25 +87,40 @@ export function whenImageLoaded(url) {
   });
 }
 
+const highResQueue = [];
+let activeDownloads = 0;
+
+function processImageDownloadQueue() {
+  if (activeDownloads >= 3 || highResQueue.length === 0) return;
+  const { el, highUrl } = highResQueue.shift();
+  activeDownloads++;
+
+  const img = new Image();
+  img.decoding = 'async';
+  img.onload = img.onerror = () => {
+    activeDownloads--;
+    if (img.complete && img.naturalWidth > 0 && el.dataset.loadingUrl === highUrl) {
+      el.style.backgroundImage = `url("${highUrl}")`;
+      el.classList.remove('is-blur-placeholder');
+    }
+    processImageDownloadQueue();
+  };
+  el.dataset.loadingUrl = highUrl;
+  img.src = highUrl;
+}
+
 export function loadWithBlurPlaceholder(el, rawUrl, isThumb = false) {
   if (!el || !rawUrl) return;
   const blurUrl = blurImageUrl(rawUrl);
   const highUrl = isThumb ? thumbImageUrl(rawUrl) : heroImageUrl(rawUrl);
 
   // Set blur placeholder first
-  el.style.backgroundImage = `url("${blurUrl}")`;
-  el.classList.add('is-blur-placeholder');
+  if (!el.style.backgroundImage || el.style.backgroundImage === 'none' || el.style.backgroundImage === '') {
+    el.style.backgroundImage = `url("${blurUrl}")`;
+    el.classList.add('is-blur-placeholder');
+  }
 
-  // Load high res
-  const img = new Image();
-  img.decoding = 'async';
-  img.onload = () => {
-    // Only update if it hasn't been changed by another call
-    if (el.dataset.loadingUrl === highUrl) {
-      el.style.backgroundImage = `url("${highUrl}")`;
-      el.classList.remove('is-blur-placeholder');
-    }
-  };
-  el.dataset.loadingUrl = highUrl;
-  img.src = highUrl;
+  // Queue high res
+  highResQueue.push({ el, highUrl });
+  processImageDownloadQueue();
 }
